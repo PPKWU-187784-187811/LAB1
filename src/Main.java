@@ -1,13 +1,12 @@
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Optional;
 import java.util.Scanner;
 
 public class Main {
 
     public static final String TEXT_TO_SAVE = "Hello world!";
-    public static final String SUCCESS = "success";
+    public static final String SUCCESS = "poprawny";
     public static final String FAILURE = "niepoprawny";
 
     public static void main(String[] args) {
@@ -23,55 +22,32 @@ public class Main {
         System.out.println("Podaj niepoprawny:");
         failureString = scanner.nextLine();
 
-        saveToFile(fileName, successString, failureString, result -> {
-            if (!isSuccess(successString, result)) {
-                return questionAboutFile(scanner);
+        saveToFile(fileName, successString, failureString, (result) -> {
+            System.out.println("Czy chcesz storzyć nową sciezke (T/N)?");
+            if (userAgree(scanner.nextLine())) {
+                System.out.print("Podaj nowa sciezke:");
+                return Optional.of(scanner.nextLine());
             }
             return Optional.empty();
         });
+
     }
 
-    private static void saveToFile(String fileName, String secondString, String thirdString, Callback callback) {
-        try {
-            writeToFile(fileName);
+    private static boolean userAgree(String string) {
+        return string.equalsIgnoreCase("T");
+    }
+
+    private static void saveToFile(String fileName, String successString, String failureString, Callback callback) {
+        boolean success = false;
+        try (PrintWriter printWriter = new PrintWriter(fileName)) {
+            printWriter.write(TEXT_TO_SAVE);
             System.out.println(SUCCESS);
-            callback.getResult(secondString);
-        } catch (IOException e) {
+            success = true;
+        } catch (IOException exception) {
             System.out.println(FAILURE);
-            callback.getResult(thirdString).ifPresent(newPath -> {
-                try {
-                    writeToFile(newPath + File.separator + fileName);
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-            });
-            e.printStackTrace();
         }
+        callback.getResult(success).ifPresent(newPath -> saveToFile(newPath, successString, failureString, callback));
     }
 
-    private static void writeToFile(String fileName) throws IOException {
-        FileOutputStream fileOutputStream = createFileToSave(fileName);
-        fileOutputStream.write(TEXT_TO_SAVE.getBytes());
-        fileOutputStream.close();
-    }
-
-    private static boolean isSuccess(String successString, String result) {
-        return successString.equals(result);
-    }
-
-    private static FileOutputStream createFileToSave(String fileName) throws IOException {
-        File file = new File(fileName);
-        file.createNewFile();
-        return new FileOutputStream(file, false);
-    }
-
-    private static Optional<String> questionAboutFile(Scanner scanner) {
-        System.out.println("Czy chcesz storzyć nową sciezke (T/N)?");
-        if (isSuccess("T", scanner.nextLine())) {
-            System.out.print("Podaj nowa sciezke:");
-            return Optional.ofNullable(scanner.nextLine());
-        }
-        return Optional.empty();
-    }
 }
 
