@@ -23,6 +23,10 @@ public class Main {
         failureString = scanner.nextLine();
 
         saveToFile(fileName, successString, failureString, (result) -> {
+
+            if (result.wasSavedCorrectly(fileName, successString, failureString)) {
+                System.out.println("Zapisano plik");
+            }
             System.out.println("Czy chcesz storzyć nową sciezke (T/N)?");
             if (userAgree(scanner.nextLine())) {
                 System.out.print("Podaj nowa sciezke:");
@@ -46,7 +50,9 @@ public class Main {
         } catch (IOException exception) {
             System.out.println(FAILURE);
         }
-        callback.getResult(success).ifPresent(newPath -> saveToFile(newPath, successString, failureString, callback));
+        boolean finalSuccess = success;
+        callback.getResult((fName, successResult, failureResult) -> finalSuccess)
+                .ifPresent(newPath -> saveToFile(newPath, successString, failureString, callback));
     }
 
 }
