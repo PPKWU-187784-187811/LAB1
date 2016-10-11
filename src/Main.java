@@ -6,61 +6,72 @@ import java.util.Scanner;
 
 public class Main {
 
-	public static void main(String[] args) {
-		String firstString;
-		String secondString;
-		String thirdString;
+    public static final String TEXT_TO_SAVE = "Hello world!";
+    public static final String SUCCESS = "success";
+    public static final String FAILURE = "niepoprawny";
 
-		Scanner odczyt = new Scanner(System.in);
-		System.out.println("Podaj nazwe pliku:");
-		firstString = odczyt.nextLine();
-		System.out.println("Podaj poprawny:");
-		secondString = odczyt.nextLine();
-		System.out.println("Podaj niepoprawny:");
-		thirdString = odczyt.nextLine();
+    public static void main(String[] args) {
+        String fileName;
+        String successString;
+        String failureString;
 
-		saveToFile(firstString, secondString, thirdString, result -> {
-			if (!secondString.equals(result)) {
-				return questionAboutFile(odczyt);
-			} else {
-				return Optional.empty();
-			}
-		});
-	}
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Podaj nazwe pliku:");
+        fileName = scanner.nextLine();
+        System.out.println("Podaj poprawny:");
+        successString = scanner.nextLine();
+        System.out.println("Podaj niepoprawny:");
+        failureString = scanner.nextLine();
 
-	private static void saveToFile(String fileName, String secondString, String thirdString, Callback callback) {
-		try {
-			File file = new File(fileName);
-			file.createNewFile();
-			FileOutputStream oFile =  oFile = new FileOutputStream(file, false);
-			oFile.write("Hello world!".getBytes());
-			oFile.close();
-			System.out.println("poprawny");
-			callback.getResult(secondString);
-		} catch (IOException e) {
-			System.out.println("niepoprawny");
-			callback.getResult(thirdString).ifPresent(newPath ->{
-				try {
-					File newFile = new File(newPath + '\\' + fileName);
-					newFile.createNewFile();
-					FileOutputStream newFileOutput = new FileOutputStream(newFile);
-					newFileOutput.write("Hello world!".getBytes());
-					newFileOutput.close();
-				} catch (IOException ex) {
-					ex.printStackTrace();
-				}
-			});
-			e.printStackTrace();
-		}
-	}
+        saveToFile(fileName, successString, failureString, result -> {
+            if (!isSuccess(successString, result)) {
+                return questionAboutFile(scanner);
+            }
+            return Optional.empty();
+        });
+    }
 
-	private static Optional<String> questionAboutFile(Scanner scanner) {
-		System.out.println("Czy chcesz storzyć nową sciezke (T/N)?");
-		if ("T".equals(scanner.nextLine())) {
-			System.out.print("Podaj nowa sciezke:");
-			return Optional.ofNullable(scanner.nextLine());
-		}
-		return Optional.empty();
-	}
+    private static void saveToFile(String fileName, String secondString, String thirdString, Callback callback) {
+        try {
+            writeToFile(fileName);
+            System.out.println(SUCCESS);
+            callback.getResult(secondString);
+        } catch (IOException e) {
+            System.out.println(FAILURE);
+            callback.getResult(thirdString).ifPresent(newPath -> {
+                try {
+                    writeToFile(newPath + File.separator + fileName);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+            e.printStackTrace();
+        }
+    }
+
+    private static void writeToFile(String fileName) throws IOException {
+        FileOutputStream fileOutputStream = createFileToSave(fileName);
+        fileOutputStream.write(TEXT_TO_SAVE.getBytes());
+        fileOutputStream.close();
+    }
+
+    private static boolean isSuccess(String successString, String result) {
+        return successString.equals(result);
+    }
+
+    private static FileOutputStream createFileToSave(String fileName) throws IOException {
+        File file = new File(fileName);
+        file.createNewFile();
+        return new FileOutputStream(file, false);
+    }
+
+    private static Optional<String> questionAboutFile(Scanner scanner) {
+        System.out.println("Czy chcesz storzyć nową sciezke (T/N)?");
+        if (isSuccess("T", scanner.nextLine())) {
+            System.out.print("Podaj nowa sciezke:");
+            return Optional.ofNullable(scanner.nextLine());
+        }
+        return Optional.empty();
+    }
 }
 
