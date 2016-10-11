@@ -29,17 +29,27 @@ public class Main {
 	}
 
 	private static void saveToFile(String fileName, String secondString, String thirdString, Callback callback) {
-		FileOutputStream oFile = null;
 		try {
 			File file = new File(fileName);
 			file.createNewFile();
-			oFile = new FileOutputStream(file, false);
+			FileOutputStream oFile =  oFile = new FileOutputStream(file, false);
 			oFile.write("Hello world!".getBytes());
-			callback.getResult(secondString);
+			oFile.close();
 			System.out.println("poprawny");
+			callback.getResult(secondString);
 		} catch (IOException e) {
 			System.out.println("niepoprawny");
-			callback.getResult(thirdString);
+			callback.getResult(thirdString).ifPresent(newPath ->{
+				try {
+					File newFile = new File(newPath + '\\' + fileName);
+					newFile.createNewFile();
+					FileOutputStream newFileOutput = new FileOutputStream(newFile);
+					newFileOutput.write("Hello world!".getBytes());
+					newFileOutput.close();
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+			});
 			e.printStackTrace();
 		}
 	}
